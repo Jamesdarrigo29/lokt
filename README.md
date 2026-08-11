@@ -81,6 +81,7 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install -r requirements.txt
+python -m playwright install chromium
 copy .env.example .env        # then fill in OPENAI_API_KEY and ANTHROPIC_API_KEY
 python main.py
 ```
