@@ -1,4 +1,5 @@
 import ipaddress
+import os
 import socket
 from urllib.parse import urlparse
 
@@ -120,27 +121,41 @@ def _extract_markdown(html: str) -> str | None:
     )
 
 
+def _fetch_with_scraperapi(url: str) -> str:
+    """Fetch a URL through ScraperAPI with JS rendering, bypassing bot detection."""
+    with httpx.Client(timeout=60) as client:
+        response = client.get(
+            "http://api.scraperapi.com",
+            params={"api_key": os.getenv("SCRAPERAPI_KEY"), "url": url, "render": "true"},
+        )
+        response.raise_for_status()
+        return response.text
+
+
 def convert_url(url: str, output_dir: str) -> str:
     """Fetch a privacy-policy page and extract its main content as Markdown.
 
     Uses a readability-style extractor (trafilatura) to strip navigation,
-    footers, and cookie banners, keeping heading structure intact. Falls
-    back to a headless browser if the plain fetch's HTML has nothing
-    extractable (a JS-rendered page whose content never appears in the raw
-    response). Returns the markdown file path.
+    footers, and cookie banners, keeping heading structure intact. When
+    SCRAPERAPI_KEY is set, routes through ScraperAPI (residential IPs + JS
+    rendering) to bypass bot detection on sites like Facebook. Falls back to
+    a direct httpx fetch + headless browser otherwise.
     """
     from pathlib import Path
 
-    html = fetch_url_safely(url)
-    markdown_content = _extract_markdown(html)
+    _assert_safe_url(url)
 
-    if not markdown_content or not markdown_content.strip():
-        # The initial URL was already validated as a public address by
-        # fetch_url_safely above; re-validate here too since this is a
-        # second, independent code path that fetches the same URL.
-        _assert_safe_url(url)
-        rendered_html = render_with_headless_browser(url)
-        markdown_content = _extract_markdown(rendered_html)
+    if os.getenv("SCRAPERAPI_KEY"):
+        html = _fetch_with_scraperapi(url)
+        markdown_content = _extract_markdown(html)
+    else:
+        html = fetch_url_safely(url)
+        markdown_content = _extract_markdown(html)
+
+        if not markdown_content or not markdown_content.strip():
+            _assert_safe_url(url)
+            rendered_html = render_with_headless_browser(url)
+            markdown_content = _extract_markdown(rendered_html)
 
     if not markdown_content or not markdown_content.strip():
         raise ValueError(f"Could not extract readable content from {url}")
