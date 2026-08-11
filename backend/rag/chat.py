@@ -47,7 +47,7 @@ def ask(question: str, company: str | None = None) -> dict:
     retriever = Retriever()
 
     top_k = int(os.getenv("RETRIEVAL_TOP_K", "8"))
-    threshold = float(os.getenv("RETRIEVAL_CONFIDENCE_THRESHOLD", "0.75"))
+    threshold = float(os.getenv("RETRIEVAL_CONFIDENCE_THRESHOLD", "0.40"))
 
     chunks = retriever.invoke(query=question, embeddings=embeddings, company=company, top_k=top_k)
     top_similarity = chunks[0].similarity if chunks else None
