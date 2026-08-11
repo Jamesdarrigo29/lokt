@@ -52,6 +52,8 @@ def ask(question: str, company: str | None = None) -> dict:
     chunks = retriever.invoke(query=question, embeddings=embeddings, company=company, top_k=top_k)
     top_similarity = chunks[0].similarity if chunks else None
 
+    print(f"[chat] query={question!r} company={company!r} top_similarity={top_similarity:.4f} threshold={threshold}")
+
     # Layer 1: retrieval confidence threshold — refuse to even call the LLM
     # if nothing relevant was found, rather than letting it improvise.
     if not chunks or top_similarity < threshold:
