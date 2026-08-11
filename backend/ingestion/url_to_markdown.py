@@ -126,7 +126,7 @@ def _fetch_with_scraperapi(url: str) -> str:
     with httpx.Client(timeout=60) as client:
         response = client.get(
             "http://api.scraperapi.com",
-            params={"api_key": os.getenv("SCRAPERAPI_KEY"), "url": url, "render": "true"},
+            params={"api_key": os.getenv("SCRAPERAPI_KEY"), "url": url},
         )
         response.raise_for_status()
         return response.text
