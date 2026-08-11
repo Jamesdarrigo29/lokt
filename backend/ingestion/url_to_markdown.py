@@ -104,7 +104,7 @@ def render_with_headless_browser(url: str) -> str:
             # wait for the initial load then give client-side rendering a
             # fixed window to finish painting.
             page.goto(url, wait_until="load", timeout=render_timeout_ms)
-            page.wait_for_timeout(3000)
+            page.wait_for_timeout(8000)
             return page.content()
         finally:
             browser.close()
