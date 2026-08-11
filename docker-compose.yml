@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: lokt
+      POSTGRES_PASSWORD: lokt
+      POSTGRES_DB: lokt
+    ports:
+      - "5432:5432"
+    volumes:
+      - lokt_pgdata:/var/lib/postgresql/data
+
+volumes:
+  lokt_pgdata:

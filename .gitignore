@@ -1,0 +1,22 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+
+# Env
+.env
+backend/.env
+
+# Data
+backend/data/raw_pdfs/*
+backend/data/markdown/*
+!backend/data/raw_pdfs/.gitkeep
+!backend/data/markdown/.gitkeep
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
