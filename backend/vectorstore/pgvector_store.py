@@ -4,7 +4,7 @@ from database.db import get_session
 from database.models import PolicyChunk
 
 
-def upload_chunks(chunks, embeddings, company: str, source: str) -> None:
+def upload_chunks(chunks, embeddings, workspace_id: str, company: str, source: str) -> None:
     """Embed and store a document's chunks in Postgres/pgvector."""
     session = get_session()
 
@@ -14,6 +14,7 @@ def upload_chunks(chunks, embeddings, company: str, source: str) -> None:
 
         for chunk, vector in zip(chunks, vectors):
             row = PolicyChunk(
+                workspace_id=workspace_id,
                 company=company,
                 source=source,
                 content=chunk.page_content,
@@ -42,6 +43,7 @@ class Retriever:
         self,
         query: str,
         embeddings,
+        workspace_id: str,
         company: str | None = None,
         top_k: int = 8,
     ) -> list[RetrievedChunk]:
@@ -60,7 +62,7 @@ class Retriever:
                 PolicyChunk.content,
                 PolicyChunk.source,
                 distance_expr.label("distance"),
-            )
+            ).filter(PolicyChunk.workspace_id == workspace_id)
 
             if company:
                 statement = statement.filter(PolicyChunk.company == company)
