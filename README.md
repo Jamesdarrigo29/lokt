@@ -10,8 +10,7 @@ text, with citations back to the source clause.
 One FastAPI backend, one Postgres database (with the `pgvector` extension for
 semantic search), one React frontend. No separate worker/queue/object-storage
 services — ingestion (PDF conversion or URL fetch → chunk → embed → store →
-extract attributes) runs synchronously inside the upload request, the same way
-the reference investor-intelligence project does it.
+extract attributes) runs synchronously inside the upload request.
 
 ```
 backend/
