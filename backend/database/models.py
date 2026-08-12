@@ -19,6 +19,7 @@ class PolicyChunk(Base):
     __tablename__ = "policy_chunks"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
     company: Mapped[str] = mapped_column(String(200), index=True)
     source: Mapped[str] = mapped_column(String(1000))
     section_heading: Mapped[str | None] = mapped_column(String(300), nullable=True)
@@ -33,6 +34,7 @@ class PrivacyAttributes(Base):
     __tablename__ = "privacy_attributes"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
     company: Mapped[str] = mapped_column(String(200), index=True)
     source: Mapped[str] = mapped_column(String(1000))
     effective_date: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -61,6 +63,7 @@ class ChatLog(Base):
     __tablename__ = "chat_logs"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
     company: Mapped[str | None] = mapped_column(String(200), nullable=True)
     question: Mapped[str] = mapped_column(Text)
     answer: Mapped[str] = mapped_column(Text)
