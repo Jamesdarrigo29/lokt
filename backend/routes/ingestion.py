@@ -1,17 +1,19 @@
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from ingestion.ingest import ingest_pdf, ingest_url
+from ratelimit import limiter
 
 router = APIRouter()
 
 
 @router.post("/upload")
-async def upload_document(company: str, file: UploadFile = File(...)):
+@limiter.limit("10/hour")
+async def upload_document(request: Request, company: str, file: UploadFile = File(...)):
     upload_dir = Path("data/raw_pdfs")
     upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -28,7 +30,11 @@ async def upload_document(company: str, file: UploadFile = File(...)):
         # inside a thread that already has a running asyncio event loop,
         # which every FastAPI request handler's thread does.
         result = await run_in_threadpool(
-            ingest_pdf, pdf_path=str(file_path), company=company, source_label=file.filename
+            ingest_pdf,
+            pdf_path=str(file_path),
+            company=company,
+            source_label=file.filename,
+            workspace_id=request.state.workspace_id,
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -42,9 +48,12 @@ class AnalyzeUrlRequest(BaseModel):
 
 
 @router.post("/analyze-url")
-async def analyze_url(request: AnalyzeUrlRequest):
+@limiter.limit("10/hour")
+async def analyze_url(request: Request, body: AnalyzeUrlRequest):
     try:
-        result = await run_in_threadpool(ingest_url, url=request.url, company=request.company)
+        result = await run_in_threadpool(
+            ingest_url, url=body.url, company=body.company, workspace_id=request.state.workspace_id
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
