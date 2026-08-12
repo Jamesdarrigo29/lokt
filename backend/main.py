@@ -3,26 +3,35 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from database.create_tables import create_tables
 from database.db import create_database
+from ratelimit import limiter
 from routes.chat import router as chat_router
 from routes.dashboard import router as dashboard_router
 from routes.health import router as health_router
 from routes.ingestion import router as ingestion_router
+from workspace import WorkspaceMiddleware
 
 load_dotenv()
 
 app = FastAPI(title="Lokt")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 _origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(WorkspaceMiddleware)
 
 
 @app.on_event("startup")
