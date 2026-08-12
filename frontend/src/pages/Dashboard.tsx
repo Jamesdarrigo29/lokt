@@ -25,7 +25,12 @@ export default function Dashboard() {
       <section>
         <h2>Ingested policies ({policies.length})</h2>
 
-        {loading && <p className="muted">Loading…</p>}
+        {loading && (
+          <p className="muted loading-state">
+            <span className="spinner" aria-hidden="true" />
+            Loading… this may take a minute
+          </p>
+        )}
 
         {!loading && policies.length === 0 && (
           <p className="muted">No policies ingested yet. Upload a PDF or paste a URL above to get started.</p>
