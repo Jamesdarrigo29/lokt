@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from rag.chat import ask
@@ -12,8 +12,8 @@ class ChatRequest(BaseModel):
 
 
 @router.post("/chat")
-async def chat(request: ChatRequest):
+async def chat(request: Request, body: ChatRequest):
     try:
-        return ask(question=request.question, company=request.company)
+        return ask(question=body.question, company=body.company, workspace_id=request.state.workspace_id)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
