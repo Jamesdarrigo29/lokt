@@ -42,14 +42,14 @@ def _validate_citations(answer: str, num_chunks: int) -> list[int]:
     return sorted(n for n in found if 1 <= n <= num_chunks)
 
 
-def ask(question: str, company: str | None = None) -> dict:
+def ask(question: str, workspace_id: str, company: str | None = None) -> dict:
     embeddings = get_embeddings()
     retriever = Retriever()
 
     top_k = int(os.getenv("RETRIEVAL_TOP_K", "8"))
     threshold = float(os.getenv("RETRIEVAL_CONFIDENCE_THRESHOLD", "0.40"))
 
-    chunks = retriever.invoke(query=question, embeddings=embeddings, company=company, top_k=top_k)
+    chunks = retriever.invoke(query=question, embeddings=embeddings, workspace_id=workspace_id, company=company, top_k=top_k)
     top_similarity = chunks[0].similarity if chunks else None
 
     print(f"[chat] query={question!r} company={company!r} top_similarity={top_similarity:.4f} threshold={threshold}")
@@ -58,6 +58,7 @@ def ask(question: str, company: str | None = None) -> dict:
     # if nothing relevant was found, rather than letting it improvise.
     if not chunks or top_similarity < threshold:
         save_chat_log(
+            workspace_id=workspace_id,
             company=company,
             question=question,
             answer=INSUFFICIENT_CONTEXT_MESSAGE,
@@ -87,6 +88,7 @@ def ask(question: str, company: str | None = None) -> dict:
     ]
 
     save_chat_log(
+        workspace_id=workspace_id,
         company=company,
         question=question,
         answer=answer,
