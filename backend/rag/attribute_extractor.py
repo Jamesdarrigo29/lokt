@@ -27,7 +27,7 @@ class ExtractedAttributes(BaseModel):
     summary: str | None = Field(None, description="2-3 sentence plain-English summary of the policy")
 
 
-def retrieve_broad_context(company: str, top_k: int = 30) -> str:
+def retrieve_broad_context(company: str, workspace_id: str, top_k: int = 30) -> str:
     """Pull a broad sample of a company's chunks to ground attribute extraction."""
     retriever = Retriever()
     embeddings = get_embeddings()
@@ -38,7 +38,7 @@ def retrieve_broad_context(company: str, top_k: int = 30) -> str:
         "GDPR, CCPA, data breach notification, international transfer, contact information"
     )
 
-    chunks = retriever.invoke(query=query, embeddings=embeddings, company=company, top_k=top_k)
+    chunks = retriever.invoke(query=query, embeddings=embeddings, workspace_id=workspace_id, company=company, top_k=top_k)
 
     return "\n\n".join(chunk.content for chunk in chunks)
 
@@ -61,8 +61,8 @@ Instructions:
 """
 
 
-def extract_attributes(company: str) -> dict:
-    context = retrieve_broad_context(company)
+def extract_attributes(company: str, workspace_id: str) -> dict:
+    context = retrieve_broad_context(company, workspace_id=workspace_id)
 
     if not context.strip():
         raise ValueError(f"No ingested content found for company={company!r}")
