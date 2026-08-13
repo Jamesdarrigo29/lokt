@@ -44,7 +44,7 @@ async function handle<T>(response: Response): Promise<T> {
 }
 
 export function fetchPolicies(): Promise<PolicyAttributes[]> {
-  return fetch(`${API_BASE}/policies`).then((r) => handle<PolicyAttributes[]>(r));
+  return fetch(`${API_BASE}/policies`, { credentials: "include" }).then((r) => handle<PolicyAttributes[]>(r));
 }
 
 export function uploadPdf(company: string, file: File) {
@@ -53,6 +53,7 @@ export function uploadPdf(company: string, file: File) {
 
   return fetch(`${API_BASE}/upload?company=${encodeURIComponent(company)}`, {
     method: "POST",
+    credentials: "include",
     body: formData,
   }).then((r) => handle(r));
 }
@@ -60,6 +61,7 @@ export function uploadPdf(company: string, file: File) {
 export function analyzeUrl(company: string, url: string) {
   return fetch(`${API_BASE}/analyze-url`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ company, url }),
   }).then((r) => handle(r));
@@ -68,6 +70,7 @@ export function analyzeUrl(company: string, url: string) {
 export function sendChatMessage(question: string, company?: string): Promise<ChatResponse> {
   return fetch(`${API_BASE}/chat`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, company: company || null }),
   }).then((r) => handle<ChatResponse>(r));
