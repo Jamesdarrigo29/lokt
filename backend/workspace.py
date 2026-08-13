@@ -31,7 +31,7 @@ class WorkspaceMiddleware(BaseHTTPMiddleware):
                 max_age=WORKSPACE_COOKIE_MAX_AGE,
                 httponly=True,
                 secure=True,
-                samesite="lax",
+                samesite="none",
             )
 
         return response
