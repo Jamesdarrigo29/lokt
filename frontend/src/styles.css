@@ -35,8 +35,9 @@ body {
 }
 
 .brand {
-  font-weight: 700;
-  font-size: 1.25rem;
+  height: 1.75rem;
+  width: auto;
+  display: block;
 }
 
 .app-header nav {
