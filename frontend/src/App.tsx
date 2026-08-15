@@ -6,7 +6,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <span className="brand">Lokt</span>
+        <img src="/logos/lokt-light.png" alt="Lokt" className="brand" />
         <nav>
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
             Dashboard
