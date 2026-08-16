@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
 from ingestion.ingest import ingest_pdf, ingest_url
+from ingestion.url_to_markdown import ScrapeBlockedError
 from ratelimit import limiter
 
 router = APIRouter()
@@ -54,6 +55,15 @@ async def analyze_url(request: Request, body: AnalyzeUrlRequest):
         result = await run_in_threadpool(
             ingest_url, url=body.url, company=body.company, workspace_id=request.state.workspace_id
         )
+    except ScrapeBlockedError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "scrape_blocked",
+                "message": "We couldn't automatically fetch this page — the site blocks automated access. "
+                "Try saving the page as a PDF and uploading it instead.",
+            },
+        ) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
