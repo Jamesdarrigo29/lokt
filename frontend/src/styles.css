@@ -72,6 +72,23 @@ body {
   color: var(--warn);
 }
 
+.upload-error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.error-action {
+  background: var(--bg);
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
 /* Loading */
 
 .loading-state {
