@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { analyzeUrl, uploadPdf } from "../api/client";
+import { ApiError, analyzeUrl, uploadPdf } from "../api/client";
 
 interface Props {
   onIngested: () => void;
@@ -12,6 +12,7 @@ export default function UploadPanel({ onIngested }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -19,6 +20,7 @@ export default function UploadPanel({ onIngested }: Props) {
 
     setStatus("loading");
     setError(null);
+    setErrorCode(null);
 
     try {
       if (mode === "pdf") {
@@ -37,6 +39,7 @@ export default function UploadPanel({ onIngested }: Props) {
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Something went wrong.");
+      setErrorCode(err instanceof ApiError ? err.code ?? null : null);
     }
   }
 
@@ -79,7 +82,24 @@ export default function UploadPanel({ onIngested }: Props) {
         {status === "loading" ? "Processing…" : "Ingest policy"}
       </button>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <div className="upload-error">
+          <p className="error">{error}</p>
+          {errorCode === "scrape_blocked" && (
+            <button
+              type="button"
+              className="error-action"
+              onClick={() => {
+                setMode("pdf");
+                setError(null);
+                setErrorCode(null);
+              }}
+            >
+              Switch to PDF upload
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }
