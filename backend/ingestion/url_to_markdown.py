@@ -16,6 +16,14 @@ class UnsafeUrlError(ValueError):
     """Raised when a URL fails SSRF-safety validation."""
 
 
+class ScrapeBlockedError(RuntimeError):
+    """Raised when a page can't be fetched because the target site (or our
+    scraping vendor) is actively refusing automated access. Distinct from
+    other failures so callers can show a clean, actionable message instead
+    of a raw vendor error.
+    """
+
+
 def _assert_public_host(hostname: str) -> None:
     """Resolve a hostname and reject it if any address is private/loopback/reserved.
 
@@ -72,6 +80,8 @@ def fetch_url_safely(url: str) -> str:
                 current_url = _assert_safe_url(next_url)
                 continue
 
+            if response.status_code in (401, 403, 429, 451):
+                raise ScrapeBlockedError(f"Site returned {response.status_code} — it appears to block automated access")
             response.raise_for_status()
 
             content_length = len(response.content)
@@ -128,7 +138,17 @@ def _fetch_with_scraperapi(url: str) -> str:
             "http://api.scraperapi.com",
             params={"api_key": os.getenv("SCRAPERAPI_KEY"), "url": url},
         )
-        response.raise_for_status()
+
+        if response.is_error:
+            # response.text can echo the request URL (with api_key) back in
+            # ScraperAPI's own error body, and httpx's default exception
+            # message embeds the full request URL — both would leak the key
+            # into logs, so redact before printing/raising.
+            api_key = os.getenv("SCRAPERAPI_KEY", "")
+            body = response.text[:2000].replace(api_key, "***") if api_key else response.text[:2000]
+            print(f"[scraperapi] {response.status_code} error body: {body}")
+            raise ScrapeBlockedError(f"ScraperAPI request failed with status {response.status_code}: {body}")
+
         return response.text
 
 
@@ -158,7 +178,7 @@ def convert_url(url: str, output_dir: str) -> str:
             markdown_content = _extract_markdown(rendered_html)
 
     if not markdown_content or not markdown_content.strip():
-        raise ValueError(f"Could not extract readable content from {url}")
+        raise ScrapeBlockedError(f"Could not extract readable content from {url}")
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
