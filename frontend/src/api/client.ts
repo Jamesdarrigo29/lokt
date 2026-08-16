@@ -35,10 +35,24 @@ export interface ChatResponse {
   insufficient_context: boolean;
 }
 
+export class ApiError extends Error {
+  code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 async function handle<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed with status ${response.status}`);
+    const detail = body.detail;
+
+    if (detail && typeof detail === "object") {
+      throw new ApiError(detail.message || `Request failed with status ${response.status}`, detail.code);
+    }
+    throw new ApiError(detail || `Request failed with status ${response.status}`);
   }
   return response.json();
 }
